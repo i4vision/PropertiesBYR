@@ -1,1 +1,11 @@
-full contents of docker-compose.yml
+version: '3.8'
+
+services:
+  property-hub-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: property-hub
+    ports:
+      - "8085:80" # We use 8085 on the host to avoid common port conflicts
+    restart: unless-stopped
