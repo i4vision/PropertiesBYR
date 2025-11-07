@@ -1,0 +1,5 @@
+{
+  "name": "Property Hub",
+  "description": "A web application to manage properties, including their associated WhatsApp groups and door codes. Users can create and delete properties, manage WhatsApp group templates and links, and view/edit door code descriptions.",
+  "requestFramePermissions": []
+}
