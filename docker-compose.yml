@@ -1,16 +1,1 @@
-version: '3.8'
-
-services:
-  property-hub-app:
-    # Build the Docker image from the Dockerfile in the current directory
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Name the container for easier identification
-    container_name: property-hub
-    # Map port 8080 on the host machine to port 80 inside the container.
-    # You can access the application at http://localhost:8080
-    ports:
-      - "8080:80"
-    # Ensure the container restarts automatically if it stops unexpectedly
-    restart: unless-stopped
+full contents of docker-compose.yml
