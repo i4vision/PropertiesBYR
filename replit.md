@@ -82,13 +82,15 @@ For advanced features (Find Groups, Get Template), users need to deploy Supabase
 - **Added Node.js Express backend server** (port 8085)
 - **Created persistent Supabase connection** using Replit Secrets (SUPABASE_URL, SUPABASE_ANON_KEY)
 - **Removed localStorage-based credentials form** - credentials now stored securely in environment
-- **Created backend API endpoints:**
-  - `GET /api/properties/:propertyName/groups` - Get all groups for a property by name
-  - `GET /api/groups/:groupName/template` - Get template for a group by group name
-  - `GET /health` - Health check endpoint
+- **CORS FIX: Complete Backend API Proxy Layer**
+  - Refactored all database operations to route through backend API
+  - Created `apiClient.ts` to replace direct Supabase calls in frontend
+  - Eliminates CORS issues when accessing self-hosted Supabase via Cloudflare tunnel
+  - Comprehensive CRUD endpoints for properties, groups, and door codes
 - **Docker deployment configuration:**
   - Full application (frontend + backend) on single port 8085
-  - Nginx reverse proxy for API routing
+  - Nginx reverse proxy for API routing (/api/* → backend container)
+  - Vite dev proxy for Replit development (/api/* → localhost:8085)
   - Separate backend-only option available
 - **UX Improvements:**
   - Added confirmation dialogs for property deletion (prevents accidental deletion of properties and all associated data)
@@ -96,35 +98,43 @@ For advanced features (Find Groups, Get Template), users need to deploy Supabase
 
 ## Backend API Endpoints
 
-### Get Groups by Property Name
+### Health Check
 ```bash
-GET http://localhost:8085/api/properties/:propertyName/groups
-```
-Returns all WhatsApp groups for a specific property (lookup by property name).
-
-**Response:**
-```json
-{
-  "propertyName": "Property Name",
-  "propertyId": "uuid",
-  "groups": [...]
-}
+GET /health
 ```
 
-### Get Template by Group Name
+### Get All Data
 ```bash
-GET http://localhost:8085/api/groups/:groupName/template
+GET /api/data
 ```
-Returns the template for a specific WhatsApp group (lookup by group name).
+Returns all properties with their associated WhatsApp groups and door codes.
 
-**Response:**
-```json
-{
-  "groupName": "Group Name",
-  "groupId": "uuid",
-  "propertyId": "uuid",
-  "template": "Template content..."
-}
+### Properties
+```bash
+POST /api/properties          # Create new property
+DELETE /api/properties/:id    # Delete property
+```
+
+### WhatsApp Groups
+```bash
+POST /api/whatsapp-groups                           # Create new group
+PUT /api/whatsapp-groups/:id                        # Update group
+DELETE /api/whatsapp-groups/:id                     # Delete group
+POST /api/whatsapp-groups/:id/links                 # Add link to group
+DELETE /api/whatsapp-groups/:id/links/:linkIndex    # Remove link from group
+```
+
+### Door Codes
+```bash
+POST /api/door-codes          # Create new door code
+PUT /api/door-codes/:id       # Update door code
+DELETE /api/door-codes/:id    # Delete door code
+```
+
+### Named Lookups (Legacy - for backward compatibility)
+```bash
+GET /api/properties/:propertyName/groups    # Get groups by property name
+GET /api/groups/:groupName/template         # Get template by group name
 ```
 
 ## Notes
