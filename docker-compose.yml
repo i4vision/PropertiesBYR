@@ -7,12 +7,13 @@ services:
       dockerfile: Dockerfile.backend
     container_name: property-hub-backend
     ports:
-      - "8085:8085" # Map host port 8085 to container port 8085
+      - "8085:8085"
     restart: unless-stopped
     environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - PORT=8085
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      PORT: "8085"
+      NODE_ENV: production
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/health"]
       interval: 30s
@@ -23,9 +24,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_SUPABASE_URL=${SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
     container_name: property-hub-frontend
     ports:
-      - "80:8085" # Frontend accessible on port 80
+      - "8080:8085"
     restart: unless-stopped
     depends_on:
       - backend
