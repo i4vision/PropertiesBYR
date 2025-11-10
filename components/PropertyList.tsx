@@ -7,7 +7,7 @@ import { GetTemplateModal } from './GetTemplateModal';
 
 interface PropertyListProps {
   properties: Property[];
-  supabase: SupabaseClient;
+  supabase: SupabaseClient | null;
   onAddProperty: (name: string) => Promise<void>;
   onDeleteProperty: (id: string) => Promise<void>;
   onSelectProperty: (id: string) => void;
@@ -161,13 +161,13 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAdd
           ))}
         </div>
       )}
-      {isSearchModalOpen && (
+      {isSearchModalOpen && supabase && (
         <FindGroupsModal
           supabase={supabase}
           onClose={() => setIsSearchModalOpen(false)}
         />
       )}
-      {isGetTemplateModalOpen && (
+      {isGetTemplateModalOpen && supabase && (
         <GetTemplateModal
           supabase={supabase}
           onClose={() => setIsGetTemplateModalOpen(false)}

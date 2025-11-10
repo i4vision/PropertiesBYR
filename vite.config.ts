@@ -14,6 +14,16 @@ export default defineConfig({
     allowedHosts: true,
     hmr: {
       overlay: false
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8085',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:8085',
+        changeOrigin: true,
+      }
     }
   }
 })

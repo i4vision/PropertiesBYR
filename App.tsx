@@ -6,6 +6,7 @@ import PropertyList from './components/PropertyList';
 import PropertyDetail from './components/PropertyDetail';
 import WhatsAppGroupDetail from './components/WhatsAppGroupDetail';
 import DoorCodeList from './components/DoorCodeList';
+import { apiClient } from './apiClient';
 
 
 const App: React.FC = () => {
@@ -20,132 +21,70 @@ const App: React.FC = () => {
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
     if (url && key) {
       setSupabaseClient(createSupabaseClient(url, key));
-    } else {
-      setError('Supabase credentials are not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.');
-      setLoading(false);
     }
   }, []);
   
-  // Fetch data when the supabase client is available
   useEffect(() => {
     const fetchProperties = async () => {
-      if (!supabaseClient) return;
-      
       setLoading(true);
       setError(null);
 
       try {
-        const { data: propertiesData, error: propertiesError } = await supabaseClient
-          .from('properties')
-          .select('id, name');
-        
-        if (propertiesError) throw propertiesError;
-
-        const propertyIds = propertiesData.map(p => p.id);
-        if (propertyIds.length === 0) {
-          setProperties([]);
-          return;
-        }
-        
-        const { data: groupsData, error: groupsError } = await supabaseClient
-          .from('whatsapp_groups')
-          .select('*')
-          .in('property_id', propertyIds);
-
-        if (groupsError) throw groupsError;
-
-        const { data: codesData, error: codesError } = await supabaseClient
-          .from('door_codes')
-          .select('*')
-          .in('property_id', propertyIds);
-        
-        if (codesError) throw codesError;
-
-        const combinedProperties: Property[] = propertiesData.map(p => ({
-          ...p,
-          whatsAppGroups: groupsData.filter(g => g.property_id === p.id).map(g => ({ ...g, links: g.links || [] })),
-          doorCodes: codesData.filter(c => c.property_id === p.id),
-        }));
-
-        setProperties(combinedProperties);
+        const data = await apiClient.getAllData();
+        setProperties(data.properties);
       } catch (err) {
         console.error("Failed to fetch properties:", err);
         const detailedMessage = (err && typeof err === 'object' && 'message' in err) ? (err as {message: string}).message : String(err);
-        setError(`Failed to fetch properties:\n${detailedMessage}\nPlease check your Supabase credentials, RLS policies, and network connection.`);
+        setError(`Failed to fetch properties:\n${detailedMessage}\nPlease check your network connection.`);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProperties();
-  }, [supabaseClient]);
-
-  // --- Data Mutation Handlers ---
+  }, []);
 
   const handleAddProperty = async (name: string) => {
-    if (!supabaseClient) throw new Error("Supabase client not initialized");
-    const { data, error } = await supabaseClient.from('properties').insert({ name }).select().single();
-    if (error) throw error;
-    
-    const codesToInsert = Array.from({length: 11}, (_, i) => ({ property_id: data.id, code_number: i, description: '' }));
-    const { data: newCodes, error: codesError } = await supabaseClient.from('door_codes').insert(codesToInsert).select();
-    if (codesError) throw codesError;
-
-    setProperties([...properties, { ...data, whatsAppGroups: [], doorCodes: newCodes || [] }]);
+    const data = await apiClient.addProperty(name);
+    setProperties([...properties, data.property]);
   };
 
   const handleDeleteProperty = async (id: string) => {
-    if (!supabaseClient) throw new Error("Supabase client not initialized");
-    const { error } = await supabaseClient.from('properties').delete().eq('id', id);
-    if (error) throw error;
+    await apiClient.deleteProperty(id);
     setProperties(properties.filter((p) => p.id !== id));
   };
   
   const handleAddGroup = async (propertyId: string, groupName: string) => {
-    if (!supabaseClient) throw new Error("Supabase client not initialized");
-    const { data, error } = await supabaseClient.from('whatsapp_groups').insert({ property_id: propertyId, name: groupName, template: '', links: [] }).select().single();
-    if (error) throw error;
-    
+    const data = await apiClient.addGroup(propertyId, groupName);
     setProperties(properties.map(p => 
-      p.id === propertyId ? { ...p, whatsAppGroups: [...p.whatsAppGroups, { ...data, links: data.links || [] }] } : p
+      p.id === propertyId ? { ...p, whatsAppGroups: [...p.whatsAppGroups, data.group] } : p
     ));
   };
   
   const handleDeleteGroup = async (propertyId: string, groupId: string) => {
-      if (!supabaseClient) throw new Error("Supabase client not initialized");
-      const { error } = await supabaseClient.from('whatsapp_groups').delete().eq('id', groupId);
-      if (error) throw error;
-      
-      setProperties(properties.map(p => 
-        p.id === propertyId ? { ...p, whatsAppGroups: p.whatsAppGroups.filter(g => g.id !== groupId) } : p
-      ));
+    await apiClient.deleteGroup(groupId);
+    setProperties(properties.map(p => 
+      p.id === propertyId ? { ...p, whatsAppGroups: p.whatsAppGroups.filter(g => g.id !== groupId) } : p
+    ));
   };
 
   const handleUpdateGroup = async (propertyId: string, groupUpdate: Pick<WhatsAppGroup, 'id' | 'template' | 'links'>) => {
-      if (!supabaseClient) throw new Error("Supabase client not initialized");
-      const { data, error } = await supabaseClient.from('whatsapp_groups').update({ template: groupUpdate.template, links: groupUpdate.links }).eq('id', groupUpdate.id).select().single();
-      if (error) throw error;
-
-      setProperties(properties.map(p => {
-          if (p.id !== propertyId) return p;
-          const updatedGroups = p.whatsAppGroups.map(g => g.id === groupUpdate.id ? { ...g, template: data.template, links: data.links || [] } : g);
-          return { ...p, whatsAppGroups: updatedGroups };
-      }));
-  };
-
-  const handleUpdateCode = async (propertyId: string, codeUpdate: Pick<DoorCode, 'id' | 'description'>) => {
-    if (!supabaseClient) throw new Error("Supabase client not initialized");
-    const { data, error } = await supabaseClient.from('door_codes').update({ description: codeUpdate.description }).eq('id', codeUpdate.id).select().single();
-    if (error) throw error;
-
+    const data = await apiClient.updateGroup(groupUpdate.id, groupUpdate.template, groupUpdate.links);
     setProperties(properties.map(p => {
-        if (p.id !== propertyId) return p;
-        const updatedCodes = p.doorCodes.map(c => c.id === codeUpdate.id ? { ...c, description: data.description } : c);
-        return { ...p, doorCodes: updatedCodes };
+      if (p.id !== propertyId) return p;
+      const updatedGroups = p.whatsAppGroups.map(g => g.id === groupUpdate.id ? data.group : g);
+      return { ...p, whatsAppGroups: updatedGroups };
     }));
   };
 
-  // --- Render Logic ---
+  const handleUpdateCode = async (propertyId: string, codeUpdate: Pick<DoorCode, 'id' | 'description'>) => {
+    const data = await apiClient.updateDoorCode(codeUpdate.id, codeUpdate.description);
+    setProperties(properties.map(p => {
+      if (p.id !== propertyId) return p;
+      const updatedCodes = p.doorCodes.map(c => c.id === codeUpdate.id ? data.doorCode : c);
+      return { ...p, doorCodes: updatedCodes };
+    }));
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen text-slate-500 dark:text-slate-400">Loading...</div>;
@@ -162,10 +101,6 @@ const App: React.FC = () => {
     );
   }
 
-  if (!supabaseClient) {
-    return <div className="flex justify-center items-center h-screen text-slate-500 dark:text-slate-400">Initializing...</div>;
-  }
-
   const renderContent = () => {
     switch (view.page) {
       case 'propertyList':
@@ -173,24 +108,28 @@ const App: React.FC = () => {
       case 'propertyDetail': {
         const property = properties.find((p) => p.id === view.propertyId);
         if (!property) return <p>Property not found</p>;
-        return <PropertyDetail property={property} onBack={() => setView({ page: 'propertyList' })} onAddGroup={(groupName) => handleAddGroup(property.id, groupName)} onDeleteGroup={(groupId) => handleDeleteGroup(property.id, groupId)} onNavigateToGroup={(groupId) => setView({ page: 'whatsAppGroupDetail', propertyId: property.id, groupId })} onNavigateToDoorCodes={() => setView({ page: 'doorCodeList', propertyId: property.id })} />;
+        return <PropertyDetail property={property} onBack={() => setView({ page: 'propertyList' })} onAddGroup={(name) => handleAddGroup(property.id, name)} onDeleteGroup={(groupId) => handleDeleteGroup(property.id, groupId)} onNavigateToGroup={(groupId) => setView({ page: 'whatsAppGroupDetail', propertyId: property.id, groupId })} onNavigateToDoorCodes={() => setView({ page: 'doorCodeList', propertyId: property.id })} />;
       }
       case 'whatsAppGroupDetail': {
         const property = properties.find((p) => p.id === view.propertyId);
         if (!property) return <p>Property not found</p>;
-        return <WhatsAppGroupDetail property={property} groupId={view.groupId} onBack={() => setView({ page: 'propertyDetail', propertyId: view.propertyId })} onUpdateGroup={(groupUpdate) => handleUpdateGroup(view.propertyId, groupUpdate)} />;
+        return <WhatsAppGroupDetail property={property} groupId={view.groupId} onBack={() => setView({ page: 'propertyDetail', propertyId: property.id })} onUpdateGroup={(groupUpdate) => handleUpdateGroup(property.id, groupUpdate)} />;
       }
       case 'doorCodeList': {
         const property = properties.find((p) => p.id === view.propertyId);
         if (!property) return <p>Property not found</p>;
-        return <DoorCodeList property={property} onBack={() => setView({ page: 'propertyDetail', propertyId: view.propertyId })} onUpdateCode={(codeUpdate) => handleUpdateCode(view.propertyId, codeUpdate)} />;
+        return <DoorCodeList property={property} onBack={() => setView({ page: 'propertyDetail', propertyId: property.id })} onUpdateCode={(codeUpdate) => handleUpdateCode(property.id, codeUpdate)} />;
       }
       default:
-        return <p>Invalid view</p>;
+        return <p>Unknown view</p>;
     }
   };
 
-  return <div className="min-h-screen bg-slate-100 dark:bg-slate-900">{renderContent()}</div>;
+  return (
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
+      {renderContent()}
+    </div>
+  );
 };
 
 export default App;
