@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { createSupabaseClient } from './supabaseClient';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Property, View, WhatsAppGroup, DoorCode } from './types';
 import PropertyList from './components/PropertyList';
 import PropertyDetail from './components/PropertyDetail';
@@ -10,19 +8,10 @@ import { apiClient } from './apiClient';
 
 
 const App: React.FC = () => {
-  const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [view, setView] = useState<View>({ page: 'propertyList' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (url && key) {
-      setSupabaseClient(createSupabaseClient(url, key));
-    }
-  }, []);
   
   useEffect(() => {
     const fetchProperties = async () => {
