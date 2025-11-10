@@ -7,54 +7,6 @@ import PropertyDetail from './components/PropertyDetail';
 import WhatsAppGroupDetail from './components/WhatsAppGroupDetail';
 import DoorCodeList from './components/DoorCodeList';
 
-const CredentialsForm: React.FC<{ onConnect: (url: string, key: string) => void }> = ({ onConnect }) => {
-  const [url, setUrl] = useState('');
-  const [key, setKey] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url.trim() && key.trim()) {
-      onConnect(url.trim(), key.trim());
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-      <div className="max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-slate-800 dark:text-white mb-6">Connect to Supabase</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="supabase-url" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Project URL</label>
-            <input
-              id="supabase-url"
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://your-project-ref.supabase.co"
-              required
-              className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <div>
-            <label htmlFor="supabase-key" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Public Anon Key</label>
-            <input
-              id="supabase-key"
-              type="password"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder="Enter your anon key"
-              required
-              className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary"
-            />
-          </div>
-          <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Connect
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 const App: React.FC = () => {
   const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null);
@@ -63,13 +15,13 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check local storage for credentials on initial load
   useEffect(() => {
-    const url = localStorage.getItem('supabaseUrl');
-    const key = localStorage.getItem('supabaseKey');
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
     if (url && key) {
       setSupabaseClient(createSupabaseClient(url, key));
     } else {
+      setError('Supabase credentials are not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.');
       setLoading(false);
     }
   }, []);
@@ -127,20 +79,6 @@ const App: React.FC = () => {
 
     fetchProperties();
   }, [supabaseClient]);
-
-  // --- Connection Handlers ---
-
-  const handleConnect = (url: string, key: string) => {
-    localStorage.setItem('supabaseUrl', url);
-    localStorage.setItem('supabaseKey', key);
-    setSupabaseClient(createSupabaseClient(url, key));
-  };
-  
-  const handleDisconnect = () => {
-    localStorage.removeItem('supabaseUrl');
-    localStorage.removeItem('supabaseKey');
-    setSupabaseClient(null); 
-  };
 
   // --- Data Mutation Handlers ---
 
@@ -213,10 +151,6 @@ const App: React.FC = () => {
     return <div className="flex justify-center items-center h-screen text-slate-500 dark:text-slate-400">Loading...</div>;
   }
   
-  if (!supabaseClient) {
-    return <CredentialsForm onConnect={handleConnect} />;
-  }
-
   if (error) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-center p-4">
@@ -224,11 +158,12 @@ const App: React.FC = () => {
           <strong className="font-bold">Error!</strong>
           <span className="block sm:inline whitespace-pre-wrap mt-2">{error}</span>
         </div>
-        <button onClick={handleDisconnect} className="mt-6 bg-primary hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">
-          Try different credentials
-        </button>
       </div>
     );
+  }
+
+  if (!supabaseClient) {
+    return <div className="flex justify-center items-center h-screen text-slate-500 dark:text-slate-400">Initializing...</div>;
   }
 
   const renderContent = () => {
