@@ -316,8 +316,6 @@ app.get('/api/groups/:groupName/template', async (req, res) => {
   }
 });
 
-// Listen on localhost ONLY (not 0.0.0.0) to prevent external access
-// Frontend will access via Vite proxy on port 5000
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Backend API server running on http://127.0.0.1:${PORT} (internal only - accessible via Vite proxy)`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend API server running on http://0.0.0.0:${PORT}`);
 });
