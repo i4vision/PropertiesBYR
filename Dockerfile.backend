@@ -5,19 +5,18 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci || npm install
+# Install production dependencies only
+RUN npm ci --omit=dev || npm install --omit=dev
 
-# Copy source code
+# Copy server file
 COPY server.js ./
-COPY supabaseClient.ts ./
-COPY types.ts ./
 
 # Expose port 8085
 EXPOSE 8085
 
 # Set environment variables (will be overridden by docker-compose)
 ENV PORT=8085
+ENV NODE_ENV=production
 
 # Start the server
 CMD ["node", "server.js"]
