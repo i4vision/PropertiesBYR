@@ -6,8 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     container_name: property-hub-backend
-    ports:
-      - "8085:8085"
     restart: unless-stopped
     environment:
       SUPABASE_URL: ${SUPABASE_URL}
@@ -19,6 +17,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - property-hub-network
 
   frontend:
     build:
@@ -27,9 +27,15 @@ services:
       args:
         - VITE_SUPABASE_URL=${SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-    container_name: property-hub-frontend
+    container_name: property-hub
     ports:
-      - "8080:8085"
+      - "8085:8085"
     restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - property-hub-network
+
+networks:
+  property-hub-network:
+    driver: bridge

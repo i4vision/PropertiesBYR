@@ -5,8 +5,9 @@ This guide shows how to deploy the complete Property Hub application (Frontend G
 ## What You'll Get
 
 After deployment, you'll have:
-- **Frontend (GUI):** `http://your-server-ip:8080` - The web interface to manage properties and groups
-- **Backend API:** `http://your-server-ip:8085` - The REST API endpoints
+- **Complete Application on Port 8085:** `http://your-server-ip:8085`
+  - Frontend GUI to manage properties and groups
+  - Backend API at `/api/*` and `/health` (proxied through nginx)
 
 ## Step-by-Step Deployment
 
@@ -54,33 +55,38 @@ Scroll down to **Environment variables** section and add exactly these two:
 
 In Portainer **Containers** view, you should see:
 
-✅ **property-hub-frontend**
+✅ **property-hub** (frontend + nginx reverse proxy)
 - Status: Running
-- Ports: `8080:8085`
-
-✅ **property-hub-backend**
-- Status: Running  
 - Ports: `8085:8085`
+
+✅ **property-hub-backend** (API server, internal only)
+- Status: Running  
+- Ports: None (internal network only)
 
 ### 6. Access Your Application
 
-**Frontend GUI (Property Management):**
+**Everything runs on port 8085:**
 ```
-http://your-server-ip:8080
+http://your-server-ip:8085
 ```
 
-**Backend API (Health Check):**
-```
-http://your-server-ip:8085/health
-```
+This single URL gives you:
+- Frontend GUI at the root
+- Backend API at `/api/*`
+- Health check at `/health`
 
 ## Using the Application
 
-1. Open `http://your-server-ip:8080` in your browser
+1. Open `http://your-server-ip:8085` in your browser
 2. You'll see the Property Hub interface
 3. Click "Add Property" to create a new property
 4. Click on a property to manage its WhatsApp groups and door codes
 5. Use the "Find Groups" and "Get Template" buttons for advanced features
+
+**Note:** All API endpoints are accessible on the same port:
+- GUI: `http://your-server-ip:8085/`
+- Health: `http://your-server-ip:8085/health`
+- API: `http://your-server-ip:8085/api/...`
 
 ## Troubleshooting
 
@@ -100,5 +106,6 @@ http://your-server-ip:8085/health
 - Test from server: `curl localhost:8085/health`
 
 ### Port conflicts
-- If port 8080 is in use, edit `docker-compose.yml` and change `8080:8085` to another port like `8888:8085`
-- If port 8085 is in use, stop the conflicting service first
+- If port 8085 is in use, you need to stop the conflicting service first
+- Check what's using the port: `sudo lsof -i :8085` or check Portainer containers
+- Alternative: Edit `docker-compose.yml` and change `8085:8085` to `8888:8085` (or any free port)
