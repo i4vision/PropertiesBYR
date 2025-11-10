@@ -29,11 +29,17 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
       setLoadError(null);
       apiClient.getHospitableProperties()
         .then((data) => {
-          setHospitableProperties(data.data || []);
+          console.log('Hospitable API response:', data);
+          if (data && Array.isArray(data.data)) {
+            setHospitableProperties(data.data);
+          } else {
+            console.error('Unexpected response format:', data);
+            setLoadError('Unexpected response format from Hospitable API');
+          }
         })
         .catch((error) => {
           console.error("Failed to load Hospitable properties", error);
-          setLoadError('Failed to load properties from Hospitable');
+          setLoadError(`Failed to load properties: ${error.message}`);
         })
         .finally(() => {
           setIsLoadingProperties(false);
