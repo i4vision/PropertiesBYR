@@ -18,9 +18,17 @@ In Portainer:
 - **Repository URL:** Your Git repository URL
 - **Repository reference:** `refs/heads/main` (or your branch name)
 - **Compose path:** `docker-compose.backend-only.yml` ⚠️ **IMPORTANT**
-- **Environment variables:** Click "Add environment variable" and add:
-  - Name: `SUPABASE_URL`, Value: `https://your-project.supabase.co`
-  - Name: `SUPABASE_ANON_KEY`, Value: `your-anon-key`
+- **Environment variables:** Scroll down to find the environment variables section. Add exactly these two variables:
+  
+  **Variable 1:**
+  - Name: `SUPABASE_URL`
+  - Value: Your full Supabase URL (e.g., `https://abcdefghijk.supabase.co`)
+  
+  **Variable 2:**
+  - Name: `SUPABASE_ANON_KEY`
+  - Value: Your Supabase anon/public key (starts with `eyJ...`)
+  
+  ⚠️ **Critical:** Make sure there are no extra spaces or quotes around the values
 
 ### 3. Deploy
 - Click **Deploy the stack**
