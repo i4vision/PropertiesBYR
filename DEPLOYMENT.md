@@ -40,7 +40,7 @@ The recommended method is to use Portainer's "Stack" feature, which uses the `do
 
 -   Once the deployment is complete, the stack will show as `running`.
 -   You can access your application in your browser by navigating to the IP address or hostname of your Portainer server, using the port you mapped in `docker-compose.yml`.
--   By default, this is `http://<your-server-ip>:8080`.
+-   By default, this is `http://<your-server-ip>:8085`.
 
 ## Updating the Application
 
