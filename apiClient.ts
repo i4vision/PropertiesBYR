@@ -1,17 +1,28 @@
-// In Replit dev environment, frontend is on port 5000 and backend is on 8085
-// In Docker deployment, nginx proxies /api requests to backend
-const API_BASE = import.meta.env.DEV 
-  ? 'http://localhost:8085'  // Development: direct backend connection
-  : window.location.origin;   // Production: nginx proxy
+// API base URL configuration
+// Both dev and production use relative URLs:
+// - Development (Replit): Vite proxy routes /api -> localhost:8085
+// - Production (Docker): nginx routes /api -> backend container
+const API_BASE = '';
+console.log('[apiClient] Using API_BASE:', API_BASE, '(relative URLs)');
 
 export const apiClient = {
   async getHospitableProperties() {
-    const response = await fetch(`${API_BASE}/api/hospitable/properties`);
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.details || 'Failed to fetch Hospitable properties');
+    try {
+      console.log('Fetching from:', `${API_BASE}/api/hospitable/properties`);
+      const response = await fetch(`${API_BASE}/api/hospitable/properties`);
+      console.log('Response status:', response.status, response.statusText);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ details: 'Unknown error' }));
+        console.error('API error response:', error);
+        throw new Error(error.details || 'Failed to fetch Hospitable properties');
+      }
+      const data = await response.json();
+      console.log('Received data:', data);
+      return data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
     }
-    return response.json();
   },
 
   async getAllData() {
