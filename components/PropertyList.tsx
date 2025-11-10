@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Property } from '../types';
 import { HomeIcon, TrashIcon, PlusIcon, ChevronRightIcon, ChatBubbleLeftRightIcon, CodeBracketIcon } from './icons';
+import { apiClient } from '../apiClient';
 
 interface PropertyListProps {
   properties: Property[];
@@ -9,18 +10,44 @@ interface PropertyListProps {
   onSelectProperty: (id: string) => void;
 }
 
+interface HospitableProperty {
+  id: string;
+  name: string;
+}
+
 const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, onDeleteProperty, onSelectProperty }) => {
-  const [newPropertyName, setNewPropertyName] = useState('');
+  const [selectedPropertyName, setSelectedPropertyName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hospitableProperties, setHospitableProperties] = useState<HospitableProperty[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAdding) {
+      setIsLoadingProperties(true);
+      setLoadError(null);
+      apiClient.getHospitableProperties()
+        .then((data) => {
+          setHospitableProperties(data.data || []);
+        })
+        .catch((error) => {
+          console.error("Failed to load Hospitable properties", error);
+          setLoadError('Failed to load properties from Hospitable');
+        })
+        .finally(() => {
+          setIsLoadingProperties(false);
+        });
+    }
+  }, [isAdding]);
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPropertyName.trim() && !isSubmitting) {
+    if (selectedPropertyName && !isSubmitting) {
       setIsSubmitting(true);
       try {
-        await onAddProperty(newPropertyName.trim());
-        setNewPropertyName('');
+        await onAddProperty(selectedPropertyName);
+        setSelectedPropertyName('');
         setIsAdding(false);
       } catch (error) {
         console.error("Failed to add property", error);
@@ -66,34 +93,55 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
 
       {isAdding && (
         <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-6">
-          <form onSubmit={handleAddProperty} className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              value={newPropertyName}
-              onChange={(e) => setNewPropertyName(e.target.value)}
-              placeholder="Enter new property name"
-              className="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
-              autoFocus
-              disabled={isSubmitting}
-            />
-            <div className="flex gap-2">
+          {isLoadingProperties ? (
+            <div className="text-center py-4 text-slate-500 dark:text-slate-400">
+              Loading properties from Hospitable...
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-4">
+              <p className="text-red-500 dark:text-red-400 mb-4">{loadError}</p>
               <button
-                type="submit"
-                className="bg-secondary hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto disabled:bg-emerald-300"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                type="button"
                 onClick={() => setIsAdding(false)}
-                className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto"
-                disabled={isSubmitting}
+                className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-md transition-colors"
               >
-                Cancel
+                Close
               </button>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleAddProperty} className="flex flex-col sm:flex-row gap-4">
+              <select
+                value={selectedPropertyName}
+                onChange={(e) => setSelectedPropertyName(e.target.value)}
+                className="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
+                autoFocus
+                disabled={isSubmitting}
+              >
+                <option value="">Select a property from Hospitable</option>
+                {hospitableProperties.map((prop) => (
+                  <option key={prop.id} value={prop.name}>
+                    {prop.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-secondary hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto disabled:bg-emerald-300"
+                  disabled={isSubmitting || !selectedPropertyName}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAdding(false)}
+                  className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       )}
 

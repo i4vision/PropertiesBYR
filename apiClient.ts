@@ -1,6 +1,15 @@
 const API_BASE = window.location.origin;
 
 export const apiClient = {
+  async getHospitableProperties() {
+    const response = await fetch(`${API_BASE}/api/hospitable/properties`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.details || 'Failed to fetch Hospitable properties');
+    }
+    return response.json();
+  },
+
   async getAllData() {
     try {
       const response = await fetch(`${API_BASE}/api/data`);
