@@ -46,8 +46,39 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// In-memory storage fallback for when Supabase is unreachable (Replit dev environment)
+let memoryStore = {
+  properties: [],
+  groups: [],
+  doorCodes: [],
+  nextId: 1
+};
+let usingMemoryStorage = false;
+
+// Test Supabase connectivity on startup
+(async () => {
+  try {
+    const { data, error } = await supabase.from('properties').select('id').limit(1);
+    if (error && error.message.includes('fetch failed')) {
+      console.warn('⚠️  Supabase unreachable - using in-memory storage for development');
+      console.warn('⚠️  Data will be lost on server restart');
+      console.warn('⚠️  Production deployment will use real Supabase database');
+      usingMemoryStorage = true;
+    } else {
+      console.log('✓ Connected to Supabase database');
+    }
+  } catch (err) {
+    console.warn('⚠️  Supabase unreachable - using in-memory storage for development');
+    usingMemoryStorage = true;
+  }
+})();
+
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Backend server is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Backend server is running',
+    storage: usingMemoryStorage ? 'in-memory' : 'supabase'
+  });
 });
 
 app.get('/api/hospitable/properties', async (req, res) => {
@@ -78,6 +109,16 @@ app.get('/api/hospitable/properties', async (req, res) => {
 
 app.get('/api/data', async (req, res) => {
   try {
+    if (usingMemoryStorage) {
+      // Use in-memory storage
+      const combinedProperties = memoryStore.properties.map(p => ({
+        ...p,
+        whatsAppGroups: memoryStore.groups.filter(g => g.property_id === p.id).map(g => ({ ...g, links: g.links || [] })),
+        doorCodes: memoryStore.doorCodes.filter(c => c.property_id === p.id),
+      }));
+      return res.json({ properties: combinedProperties });
+    }
+
     console.log('Fetching properties from Supabase...');
     const { data: propertiesData, error: propertiesError } = await supabase
       .from('properties')
@@ -126,6 +167,31 @@ app.post('/api/properties', async (req, res) => {
       return res.status(400).json({ error: 'Property name is required' });
     }
 
+    if (usingMemoryStorage) {
+      // Use in-memory storage
+      const newProperty = {
+        id: `mem-${memoryStore.nextId++}`,
+        name
+      };
+      memoryStore.properties.push(newProperty);
+      
+      const newCodes = Array.from({length: 11}, (_, i) => ({
+        id: `mem-code-${memoryStore.nextId++}`,
+        property_id: newProperty.id,
+        code_number: i,
+        description: ''
+      }));
+      memoryStore.doorCodes.push(...newCodes);
+      
+      return res.json({
+        property: {
+          ...newProperty,
+          whatsAppGroups: [],
+          doorCodes: newCodes
+        }
+      });
+    }
+
     const { data, error } = await supabase
       .from('properties')
       .insert({ name })
@@ -163,6 +229,14 @@ app.post('/api/properties', async (req, res) => {
 app.delete('/api/properties/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    if (usingMemoryStorage) {
+      memoryStore.properties = memoryStore.properties.filter(p => p.id !== id);
+      memoryStore.groups = memoryStore.groups.filter(g => g.property_id !== id);
+      memoryStore.doorCodes = memoryStore.doorCodes.filter(c => c.property_id !== id);
+      return res.json({ success: true });
+    }
+    
     const { error } = await supabase
       .from('properties')
       .delete()
@@ -183,6 +257,18 @@ app.post('/api/properties/:propertyId/groups', async (req, res) => {
     
     if (!name) {
       return res.status(400).json({ error: 'Group name is required' });
+    }
+
+    if (usingMemoryStorage) {
+      const newGroup = {
+        id: `mem-group-${memoryStore.nextId++}`,
+        property_id: propertyId,
+        name,
+        template: '',
+        links: []
+      };
+      memoryStore.groups.push(newGroup);
+      return res.json({ group: { ...newGroup, links: newGroup.links || [] } });
     }
 
     const { data, error } = await supabase
@@ -207,6 +293,12 @@ app.post('/api/properties/:propertyId/groups', async (req, res) => {
 app.delete('/api/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    if (usingMemoryStorage) {
+      memoryStore.groups = memoryStore.groups.filter(g => g.id !== id);
+      return res.json({ success: true });
+    }
+    
     const { error } = await supabase
       .from('whatsapp_groups')
       .delete()
@@ -224,6 +316,16 @@ app.put('/api/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { template, links } = req.body;
+    
+    if (usingMemoryStorage) {
+      const group = memoryStore.groups.find(g => g.id === id);
+      if (group) {
+        group.template = template;
+        group.links = links;
+        return res.json({ group: { ...group, links: group.links || [] } });
+      }
+      return res.status(404).json({ error: 'Group not found' });
+    }
     
     const { data, error } = await supabase
       .from('whatsapp_groups')
@@ -244,6 +346,15 @@ app.put('/api/door-codes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { description } = req.body;
+    
+    if (usingMemoryStorage) {
+      const doorCode = memoryStore.doorCodes.find(c => c.id === id);
+      if (doorCode) {
+        doorCode.description = description;
+        return res.json({ doorCode });
+      }
+      return res.status(404).json({ error: 'Door code not found' });
+    }
     
     const { data, error } = await supabase
       .from('door_codes')
