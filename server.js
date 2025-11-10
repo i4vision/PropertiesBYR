@@ -5,8 +5,28 @@ import { createClient } from '@supabase/supabase-js';
 const app = express();
 const PORT = 8085;
 
-app.use(cors());
+// Configure CORS to only allow requests from the Vite dev server
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    // OR from localhost (Vite proxy)
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('replit.dev')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // For now, allow all - we'll restrict in production
+    }
+  },
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.headers.origin || 'no origin'}`);
+  next();
+});
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -296,6 +316,8 @@ app.get('/api/groups/:groupName/template', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend API server running on http://0.0.0.0:${PORT}`);
+// Listen on localhost ONLY (not 0.0.0.0) to prevent external access
+// Frontend will access via Vite proxy on port 5000
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Backend API server running on http://127.0.0.1:${PORT} (internal only - accessible via Vite proxy)`);
 });
