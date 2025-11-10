@@ -92,7 +92,7 @@ For advanced features (Find Groups, Get Template), users need to deploy Supabase
 
 ### Get Groups by Property Name
 ```bash
-GET http://localhost:3000/api/properties/:propertyName/groups
+GET http://localhost:8085/api/properties/:propertyName/groups
 ```
 Returns all WhatsApp groups for a specific property (lookup by property name).
 
@@ -107,7 +107,7 @@ Returns all WhatsApp groups for a specific property (lookup by property name).
 
 ### Get Template by Group Name
 ```bash
-GET http://localhost:3000/api/groups/:groupName/template
+GET http://localhost:8085/api/groups/:groupName/template
 ```
 Returns the template for a specific WhatsApp group (lookup by group name).
 
@@ -122,7 +122,7 @@ Returns the template for a specific WhatsApp group (lookup by group name).
 ```
 
 ## Notes
-- Application now has both frontend (port 5000) and backend (port 3000)
+- Application now has both frontend (port 5000) and backend (port 8085)
 - Backend server connects to Supabase using environment variables
 - Frontend receives Supabase credentials via Vite's define at build time
 - Supabase Edge Functions are optional and require separate deployment via Supabase CLI

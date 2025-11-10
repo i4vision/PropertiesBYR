@@ -14,11 +14,11 @@ These credentials are automatically loaded when the application starts.
 
 ## Backend Server
 
-The backend API server runs on **port 3000** and is accessible at `http://localhost:3000`.
+The backend API server runs on **port 8085** and is accessible at `http://localhost:8085`.
 
 ### Health Check
 ```bash
-GET http://localhost:3000/health
+GET http://localhost:8085/health
 ```
 
 **Response:**
@@ -45,7 +45,7 @@ GET /api/properties/:propertyName/groups
 
 **Example Request:**
 ```bash
-curl http://localhost:3000/api/properties/Sunset%20Villa/groups
+curl http://localhost:8085/api/properties/Sunset%20Villa/groups
 ```
 
 **Success Response (200):**
@@ -94,7 +94,7 @@ GET /api/groups/:groupName/template
 
 **Example Request:**
 ```bash
-curl http://localhost:3000/api/groups/Sunset%20Villa%20-%20Owners/template
+curl http://localhost:8085/api/groups/Sunset%20Villa%20-%20Owners/template
 ```
 
 **Success Response (200):**
@@ -145,7 +145,7 @@ npm run dev
 ```
 
 This command:
-1. Starts the Express backend server on port 3000
+1. Starts the Express backend server on port 8085
 2. Starts the Vite frontend dev server on port 5000
 
 ### Individual Servers
