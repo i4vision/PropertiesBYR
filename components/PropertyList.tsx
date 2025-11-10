@@ -1,24 +1,18 @@
 import React, { useState } from 'react';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Property } from '../types';
-import { HomeIcon, TrashIcon, PlusIcon, ChevronRightIcon, ChatBubbleLeftRightIcon, CodeBracketIcon, SearchIcon, DocumentTextIcon } from './icons';
-import { FindGroupsModal } from './FindGroupsModal';
-import { GetTemplateModal } from './GetTemplateModal';
+import { HomeIcon, TrashIcon, PlusIcon, ChevronRightIcon, ChatBubbleLeftRightIcon, CodeBracketIcon } from './icons';
 
 interface PropertyListProps {
   properties: Property[];
-  supabase: SupabaseClient | null;
   onAddProperty: (name: string) => Promise<void>;
   onDeleteProperty: (id: string) => Promise<void>;
   onSelectProperty: (id: string) => void;
 }
 
-const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAddProperty, onDeleteProperty, onSelectProperty }) => {
+const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, onDeleteProperty, onSelectProperty }) => {
   const [newPropertyName, setNewPropertyName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isGetTemplateModalOpen, setIsGetTemplateModalOpen] = useState(false);
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,29 +55,13 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAdd
           <HomeIcon className="w-8 h-8 text-primary" />
           <span>My Properties</span>
         </h1>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-            <button
-              onClick={() => setIsGetTemplateModalOpen(true)}
-              className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg inline-flex items-center gap-2 transition-colors"
-            >
-              <DocumentTextIcon className="w-5 h-5" />
-              <span>Get Template</span>
-            </button>
-            <button
-              onClick={() => setIsSearchModalOpen(true)}
-              className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg inline-flex items-center gap-2 transition-colors"
-            >
-              <SearchIcon className="w-5 h-5" />
-              <span>Find Groups</span>
-            </button>
-            <button
-              onClick={() => setIsAdding(true)}
-              className="bg-primary hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center gap-2 transition-colors"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Property</span>
-            </button>
-        </div>
+        <button
+          onClick={() => setIsAdding(true)}
+          className="bg-primary hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center gap-2 transition-colors"
+        >
+          <PlusIcon className="w-5 h-5" />
+          <span>Add Property</span>
+        </button>
       </header>
 
       {isAdding && (
@@ -160,18 +138,6 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAdd
             </div>
           ))}
         </div>
-      )}
-      {isSearchModalOpen && supabase && (
-        <FindGroupsModal
-          supabase={supabase}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
-      )}
-      {isGetTemplateModalOpen && supabase && (
-        <GetTemplateModal
-          supabase={supabase}
-          onClose={() => setIsGetTemplateModalOpen(false)}
-        />
       )}
     </div>
   );

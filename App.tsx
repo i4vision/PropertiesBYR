@@ -104,7 +104,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (view.page) {
       case 'propertyList':
-        return <PropertyList supabase={supabaseClient} properties={properties} onAddProperty={handleAddProperty} onDeleteProperty={handleDeleteProperty} onSelectProperty={(id) => setView({ page: 'propertyDetail', propertyId: id })} />;
+        return <PropertyList properties={properties} onAddProperty={handleAddProperty} onDeleteProperty={handleDeleteProperty} onSelectProperty={(id) => setView({ page: 'propertyDetail', propertyId: id })} />;
       case 'propertyDetail': {
         const property = properties.find((p) => p.id === view.propertyId);
         if (!property) return <p>Property not found</p>;
