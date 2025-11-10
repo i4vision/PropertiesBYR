@@ -22,6 +22,32 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend server is running' });
 });
 
+app.get('/api/hospitable/properties', async (req, res) => {
+  try {
+    const token = process.env.HOSPITABLE_API_TOKEN;
+    if (!token) {
+      return res.status(500).json({ error: 'Hospitable API token not configured' });
+    }
+
+    const response = await fetch('https://public.api.hospitable.com/v2/properties', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Hospitable API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching Hospitable properties:', error);
+    res.status(500).json({ error: 'Failed to fetch Hospitable properties', details: error.message });
+  }
+});
+
 app.get('/api/data', async (req, res) => {
   try {
     console.log('Fetching properties from Supabase...');
