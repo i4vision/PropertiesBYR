@@ -2,7 +2,15 @@
 
 This guide explains how to deploy the application to a Portainer instance using the provided Docker files.
 
-The recommended method is to use Portainer's "Stack" feature, which uses the `docker-compose.yml` file.
+## Deployment Options
+
+### Option 1: Backend API Only (Port 8085)
+Use `docker-compose.backend-only.yml` - Deploys only the Express backend API server on port 8085
+
+### Option 2: Full Application
+Use `docker-compose.yml` - Deploys both backend (8085) and frontend (80)
+
+The recommended method is to use Portainer's "Stack" feature.
 
 ## Prerequisites
 
@@ -26,9 +34,13 @@ The recommended method is to use Portainer's "Stack" feature, which uses the `do
 -   **Repository URL:** Enter the URL of your Git repository (e.g., `https://github.com/your-username/your-repo.git`).
     -   If your repository is private, you will also need to enable **Authentication** and provide your Git credentials or an access token.
 
--   **Compose path:** The default is `docker-compose.yml`, which is correct for this project. You can leave it as is.
+-   **Compose path:** 
+    -   For backend API only: `docker-compose.backend-only.yml`
+    -   For full application: `docker-compose.yml` (default)
 
--   **Environment variables:** This application does not require any build-time environment variables, so you can skip this section.
+-   **Environment variables:** Add the following required environment variables:
+    -   `SUPABASE_URL`: Your Supabase project URL
+    -   `SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
 ### 3. Deploy the Stack
 
@@ -38,9 +50,16 @@ The recommended method is to use Portainer's "Stack" feature, which uses the `do
 
 ### 4. Access Your Application
 
--   Once the deployment is complete, the stack will show as `running`.
--   You can access your application in your browser by navigating to the IP address or hostname of your Portainer server, using the port you mapped in `docker-compose.yml`.
--   By default, this is `http://<your-server-ip>:8085`.
+Once the deployment is complete, the stack will show as `running`.
+
+**Backend API Only:**
+-   Backend API: `http://<your-server-ip>:8085`
+-   Health check: `http://<your-server-ip>:8085/health`
+-   API endpoints available at `/api/*`
+
+**Full Application:**
+-   Frontend: `http://<your-server-ip>:80`
+-   Backend API: `http://<your-server-ip>:8085`
 
 ## Updating the Application
 

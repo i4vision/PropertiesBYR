@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: property-hub-backend
+    container_name: property-hub
     ports:
       - "8085:8085" # Map host port 8085 to container port 8085
     restart: unless-stopped
@@ -18,14 +18,3 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: property-hub-frontend
-    ports:
-      - "80:8085" # Frontend accessible on port 80
-    restart: unless-stopped
-    depends_on:
-      - backend
