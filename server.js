@@ -24,9 +24,12 @@ app.get('/health', (req, res) => {
 
 app.get('/api/data', async (req, res) => {
   try {
+    console.log('Fetching properties from Supabase...');
     const { data: propertiesData, error: propertiesError } = await supabase
       .from('properties')
       .select('id, name');
+    
+    console.log('Properties result:', { data: propertiesData, error: propertiesError });
     
     if (propertiesError) throw propertiesError;
 
