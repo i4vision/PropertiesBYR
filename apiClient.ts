@@ -1,4 +1,8 @@
-const API_BASE = window.location.origin;
+// In Replit dev environment, frontend is on port 5000 and backend is on 8085
+// In Docker deployment, nginx proxies /api requests to backend
+const API_BASE = import.meta.env.DEV 
+  ? 'http://localhost:8085'  // Development: direct backend connection
+  : window.location.origin;   // Production: nginx proxy
 
 export const apiClient = {
   async getHospitableProperties() {
