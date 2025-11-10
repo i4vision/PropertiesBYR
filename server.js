@@ -1,9 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 8085;
+const PORT = process.env.PORT || 5000;
 
 // Configure CORS to only allow requests from the Vite dev server
 const corsOptions = {
@@ -21,6 +26,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Serve static files from dist folder
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Log all incoming requests
 app.use((req, res, next) => {
@@ -314,6 +322,11 @@ app.get('/api/groups/:groupName/template', async (req, res) => {
     console.error('Error fetching template:', error);
     res.status(500).json({ error: 'Failed to fetch template', details: error.message });
   }
+});
+
+// Serve React app for all other routes (must be last)
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
