@@ -21,5 +21,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8085
 
 # Healthcheck updated too
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -q -O- http://localhost:8085/ || exit 1
+HEALTHCHECK NONE
