@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Property } from '../types';
 import { HomeIcon, TrashIcon, PlusIcon, ChevronRightIcon, ChatBubbleLeftRightIcon, CodeBracketIcon } from './icons';
-import { apiClient } from '../apiClient';
 
 interface PropertyListProps {
   properties: Property[];
@@ -25,24 +24,39 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
 
   useEffect(() => {
     if (isAdding) {
+      console.log('[PropertyList] Starting to fetch Hospitable properties...');
       setIsLoadingProperties(true);
       setLoadError(null);
-      apiClient.getHospitableProperties()
+      
+      const url = '/api/hospitable/properties';
+      console.log('[PropertyList] Fetching from URL:', url);
+      console.log('[PropertyList] Window location:', window.location.href);
+      
+      fetch(url)
+        .then(response => {
+          console.log('[PropertyList] Fetch response:', response.status, response.statusText);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
         .then((data) => {
-          console.log('Hospitable API response:', data);
+          console.log('[PropertyList] Received data:', data);
           if (data && Array.isArray(data.data)) {
+            console.log('[PropertyList] Setting properties:', data.data.length, 'properties');
             setHospitableProperties(data.data);
           } else {
-            console.error('Unexpected response format:', data);
+            console.error('[PropertyList] Unexpected response format:', data);
             setLoadError('Unexpected response format from Hospitable API');
           }
         })
         .catch((error) => {
-          console.error("Failed to load Hospitable properties", error);
+          console.error("[PropertyList] Error fetching properties:", error);
           setLoadError(`Failed to load properties: ${error.message}`);
         })
         .finally(() => {
           setIsLoadingProperties(false);
+          console.log('[PropertyList] Fetch complete');
         });
     }
   }, [isAdding]);
