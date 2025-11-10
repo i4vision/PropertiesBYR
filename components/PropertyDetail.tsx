@@ -33,7 +33,15 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
     }
   };
 
-  const handleDeleteGroup = async (groupId: string) => {
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${groupName}"?\n\nThis will permanently delete the WhatsApp group, its template, and all associated links.`
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+    
     try {
         await onDeleteGroup(groupId);
     } catch (error) {
@@ -94,7 +102,7 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
                     <div key={group.id} className="group bg-slate-50 dark:bg-slate-700/50 p-3 rounded-md flex justify-between items-center">
                         <span className="font-medium text-slate-700 dark:text-slate-200">{group.name}</span>
                         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => handleDeleteGroup(group.id)} className="p-1 text-slate-500 hover:text-danger"><TrashIcon className="w-4 h-4" /></button>
+                            <button onClick={() => handleDeleteGroup(group.id, group.name)} className="p-1 text-slate-500 hover:text-danger"><TrashIcon className="w-4 h-4" /></button>
                             <button onClick={() => onNavigateToGroup(group.id)} className="p-1 text-slate-500 hover:text-primary"><ChevronRightIcon className="w-5 h-5" /></button>
                         </div>
                     </div>

@@ -14,11 +14,11 @@ Property Hub is a React-based property management application that connects to S
 - **Database:** Supabase (client-side connection)
 
 ### Key Features
-1. Property management (create, view, delete)
-2. WhatsApp group management per property
+1. Property management (create, view, delete with confirmation)
+2. WhatsApp group management per property (delete with confirmation)
 3. Door code management (11 codes per property)
 4. Modal-based workflows for finding groups and templates
-5. Local storage for Supabase credentials
+5. Deletion protection with confirmation dialogs
 
 ### File Structure
 ```
@@ -79,14 +79,20 @@ For advanced features (Find Groups, Get Template), users need to deploy Supabase
 - Set up workflow for dev server (runs both backend and frontend)
 - Added .gitignore entries (node_modules, dist, .env.local)
 - Created replit.md documentation
-- **Added Node.js Express backend server** (localhost:3000)
+- **Added Node.js Express backend server** (port 8085)
 - **Created persistent Supabase connection** using Replit Secrets (SUPABASE_URL, SUPABASE_ANON_KEY)
 - **Removed localStorage-based credentials form** - credentials now stored securely in environment
-- **Created two new API endpoints:**
+- **Created backend API endpoints:**
   - `GET /api/properties/:propertyName/groups` - Get all groups for a property by name
   - `GET /api/groups/:groupName/template` - Get template for a group by group name
   - `GET /health` - Health check endpoint
-- Updated frontend to use environment variables injected via Vite define
+- **Docker deployment configuration:**
+  - Full application (frontend + backend) on single port 8085
+  - Nginx reverse proxy for API routing
+  - Separate backend-only option available
+- **UX Improvements:**
+  - Added confirmation dialogs for property deletion (prevents accidental deletion of properties and all associated data)
+  - Added confirmation dialogs for WhatsApp group deletion (prevents accidental deletion of groups and templates)
 
 ## Backend API Endpoints
 

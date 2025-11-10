@@ -37,7 +37,15 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAdd
     }
   };
   
-  const handleDeleteProperty = async (id: string) => {
+  const handleDeleteProperty = async (id: string, propertyName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${propertyName}"?\n\nThis will permanently delete the property and all its WhatsApp groups and door codes.`
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+    
     try {
       await onDeleteProperty(id);
     } catch (error) {
@@ -134,7 +142,7 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, supabase, onAdd
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleDeleteProperty(property.id)}
+                    onClick={() => handleDeleteProperty(property.id, property.name)}
                     className="p-2 text-slate-500 hover:text-danger hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-colors"
                     aria-label={`Delete ${property.name}`}
                   >
