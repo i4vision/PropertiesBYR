@@ -43,8 +43,16 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
         .then((data) => {
           console.log('[PropertyList] Received data:', data);
           if (data && Array.isArray(data.data)) {
-            console.log('[PropertyList] Setting properties:', data.data.length, 'properties');
-            setHospitableProperties(data.data);
+            console.log('[PropertyList] Total properties from API:', data.data.length);
+            
+            // Filter out properties that have already been added
+            const existingPropertyNames = new Set(properties.map(p => p.name));
+            const availableProperties = data.data.filter(
+              (prop: HospitableProperty) => !existingPropertyNames.has(prop.name)
+            );
+            
+            console.log('[PropertyList] Available properties (not yet added):', availableProperties.length);
+            setHospitableProperties(availableProperties);
           } else {
             console.error('[PropertyList] Unexpected response format:', data);
             setLoadError('Unexpected response format from Hospitable API');
@@ -59,7 +67,7 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
           console.log('[PropertyList] Fetch complete');
         });
     }
-  }, [isAdding]);
+  }, [isAdding, properties]);
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
