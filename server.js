@@ -107,6 +107,37 @@ app.get('/api/hospitable/properties', async (req, res) => {
   }
 });
 
+app.get('/api/whatsapp/groups', async (req, res) => {
+  try {
+    const apiKey = process.env.WHATSAPP_API_KEY;
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://evo01.i4vision.us';
+    const instance = process.env.WHATSAPP_INSTANCE || 'MC';
+    
+    if (!apiKey) {
+      return res.status(500).json({ error: 'WhatsApp API key not configured' });
+    }
+
+    const url = `${apiUrl}/group/fetchAllGroups/${instance}?getParticipants=false`;
+    console.log(`Fetching WhatsApp groups from: ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'apiKey': apiKey
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`WhatsApp API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching WhatsApp groups:', error);
+    res.status(500).json({ error: 'Failed to fetch WhatsApp groups', details: error.message });
+  }
+});
+
 app.get('/api/data', async (req, res) => {
   try {
     if (usingMemoryStorage) {

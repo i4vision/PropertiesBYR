@@ -25,6 +25,25 @@ export const apiClient = {
     }
   },
 
+  async getWhatsAppGroups() {
+    try {
+      console.log('Fetching WhatsApp groups from:', `${API_BASE}/api/whatsapp/groups`);
+      const response = await fetch(`${API_BASE}/api/whatsapp/groups`);
+      console.log('WhatsApp groups response status:', response.status, response.statusText);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ details: 'Unknown error' }));
+        console.error('WhatsApp API error response:', error);
+        throw new Error(error.details || 'Failed to fetch WhatsApp groups');
+      }
+      const data = await response.json();
+      console.log('Received WhatsApp groups:', data);
+      return data;
+    } catch (error) {
+      console.error('WhatsApp fetch error:', error);
+      throw error;
+    }
+  },
+
   async getAllData() {
     try {
       const response = await fetch(`${API_BASE}/api/data`);
