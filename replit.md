@@ -170,7 +170,7 @@ POST /api/door-codes/use          # Track door code usage (sets last_used timest
 ```bash
 GET /api/properties/:propertyName/door-codes    # Get door codes by property name (includes updated_at and last_used timestamps)
 GET /api/properties/:propertyName/groups        # Get groups by property name
-GET /api/groups/:groupName/template             # Get template by group name
+GET /api/groups/:groupName/template             # Get template and links by group name
 ```
 
 ## Notes

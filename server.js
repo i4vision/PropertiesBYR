@@ -585,7 +585,7 @@ app.get('/api/groups/:groupName/template', async (req, res) => {
     
     const { data: group, error: groupError } = await supabase
       .from('whatsapp_groups')
-      .select('id, name, template, property_id')
+      .select('id, name, template, links, property_id')
       .eq('name', groupName)
       .single();
     
@@ -600,7 +600,8 @@ app.get('/api/groups/:groupName/template', async (req, res) => {
       groupName: group.name,
       groupId: group.id,
       propertyId: group.property_id,
-      template: group.template 
+      template: group.template,
+      links: group.links || []
     });
   } catch (error) {
     console.error('Error fetching template:', error);
