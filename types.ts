@@ -9,6 +9,7 @@ export interface WhatsAppGroup {
   name: string;
   template: string;
   links: string[];
+  evolution_id?: string;
 }
 
 export interface Property {

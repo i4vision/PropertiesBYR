@@ -82,11 +82,11 @@ export const apiClient = {
     return response.json();
   },
 
-  async addGroup(propertyId: string, name: string) {
+  async addGroup(propertyId: string, name: string, evolution_id?: string) {
     const response = await fetch(`${API_BASE}/api/properties/${propertyId}/groups`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, evolution_id }),
     });
     if (!response.ok) {
       const error = await response.json();

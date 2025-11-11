@@ -45,8 +45,8 @@ const App: React.FC = () => {
     setProperties(properties.filter((p) => p.id !== id));
   };
   
-  const handleAddGroup = async (propertyId: string, groupName: string) => {
-    const data = await apiClient.addGroup(propertyId, groupName);
+  const handleAddGroup = async (propertyId: string, groupName: string, evolutionId?: string) => {
+    const data = await apiClient.addGroup(propertyId, groupName, evolutionId);
     setProperties(properties.map(p => 
       p.id === propertyId ? { ...p, whatsAppGroups: [...p.whatsAppGroups, data.group] } : p
     ));
@@ -99,7 +99,7 @@ const App: React.FC = () => {
       case 'propertyDetail': {
         const property = properties.find((p) => p.id === view.propertyId);
         if (!property) return <p>Property not found</p>;
-        return <PropertyDetail property={property} onBack={() => setView({ page: 'propertyList' })} onAddGroup={(name) => handleAddGroup(property.id, name)} onDeleteGroup={(groupId) => handleDeleteGroup(property.id, groupId)} onNavigateToGroup={(groupId) => setView({ page: 'whatsAppGroupDetail', propertyId: property.id, groupId })} onNavigateToDoorCodes={() => setView({ page: 'doorCodeList', propertyId: property.id })} />;
+        return <PropertyDetail property={property} onBack={() => setView({ page: 'propertyList' })} onAddGroup={(name, evolutionId) => handleAddGroup(property.id, name, evolutionId)} onDeleteGroup={(groupId) => handleDeleteGroup(property.id, groupId)} onNavigateToGroup={(groupId) => setView({ page: 'whatsAppGroupDetail', propertyId: property.id, groupId })} onNavigateToDoorCodes={() => setView({ page: 'doorCodeList', propertyId: property.id })} />;
       }
       case 'whatsAppGroupDetail': {
         const property = properties.find((p) => p.id === view.propertyId);

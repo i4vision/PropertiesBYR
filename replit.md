@@ -68,8 +68,12 @@ Credentials are stored in browser localStorage for convenience.
 ### Database Schema
 The app expects these Supabase tables:
 - `properties` (id, name)
-- `whatsapp_groups` (id, property_id, name, template, links)
+- `whatsapp_groups` (id, property_id, name, template, links, evolution_id)
+  - `evolution_id`: TEXT field storing WhatsApp Evolution API group ID (not displayed in UI, returned in GET /api/data)
 - `door_codes` (id, property_id, code_number, description)
+
+**Database Migration Required:**
+Run `database_migration.sql` in your Supabase SQL editor to add the `evolution_id` column to existing databases.
 
 ### Optional: Edge Functions
 For advanced features (Find Groups, Get Template), users need to deploy Supabase Edge Functions separately. See `INSTRUCTIONS.md` for details.

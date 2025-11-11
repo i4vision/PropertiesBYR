@@ -5,7 +5,7 @@ import { TrashIcon, PlusIcon, ChevronRightIcon, ArrowLeftIcon, ChatBubbleLeftRig
 interface PropertyDetailProps {
   property: Property;
   onBack: () => void;
-  onAddGroup: (groupName: string) => Promise<void>;
+  onAddGroup: (groupName: string, evolutionId?: string) => Promise<void>;
   onDeleteGroup: (groupId: string) => Promise<void>;
   onNavigateToGroup: (groupId: string) => void;
   onNavigateToDoorCodes: () => void;
@@ -17,7 +17,7 @@ interface WhatsAppGroup {
 }
 
 const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAddGroup, onDeleteGroup, onNavigateToGroup, onNavigateToDoorCodes }) => {
-  const [selectedGroupName, setSelectedGroupName] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [whatsappGroups, setWhatsappGroups] = useState<WhatsAppGroup[]>([]);
@@ -72,11 +72,14 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
 
   const handleAddGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedGroupName && !isSubmitting) {
+    if (selectedGroupId && !isSubmitting) {
       setIsSubmitting(true);
       try {
-        await onAddGroup(selectedGroupName);
-        setSelectedGroupName('');
+        const selectedGroup = whatsappGroups.find(g => g.id === selectedGroupId);
+        if (selectedGroup) {
+          await onAddGroup(selectedGroup.subject, selectedGroupId);
+        }
+        setSelectedGroupId('');
         setIsAdding(false);
       } catch (error) {
         console.error("Failed to add group:", error);
@@ -153,15 +156,15 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
               ) : (
                 <form onSubmit={handleAddGroup} className="flex flex-col gap-2">
                   <select
-                    value={selectedGroupName}
-                    onChange={(e) => setSelectedGroupName(e.target.value)}
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
                     className="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-secondary focus:outline-none"
                     autoFocus
                     disabled={isSubmitting}
                   >
                     <option value="">Select a WhatsApp group</option>
                     {whatsappGroups.map((group) => (
-                      <option key={group.id} value={group.subject}>
+                      <option key={group.id} value={group.id}>
                         {group.subject}
                       </option>
                     ))}
@@ -170,7 +173,7 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
                     <button
                       type="submit"
                       className="bg-secondary hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md transition-colors flex-1 disabled:bg-emerald-300"
-                      disabled={isSubmitting || !selectedGroupName}
+                      disabled={isSubmitting || !selectedGroupId}
                     >
                       {isSubmitting ? 'Saving...' : 'Save'}
                     </button>

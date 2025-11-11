@@ -290,7 +290,7 @@ app.delete('/api/properties/:id', async (req, res) => {
 app.post('/api/properties/:propertyId/groups', async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { name } = req.body;
+    const { name, evolution_id } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Group name is required' });
@@ -302,7 +302,8 @@ app.post('/api/properties/:propertyId/groups', async (req, res) => {
         property_id: propertyId,
         name,
         template: '',
-        links: []
+        links: [],
+        evolution_id: evolution_id || null
       };
       memoryStore.groups.push(newGroup);
       return res.json({ group: { ...newGroup, links: newGroup.links || [] } });
@@ -314,7 +315,8 @@ app.post('/api/properties/:propertyId/groups', async (req, res) => {
         property_id: propertyId,
         name,
         template: '',
-        links: []
+        links: [],
+        evolution_id: evolution_id || null
       })
       .select()
       .single();
