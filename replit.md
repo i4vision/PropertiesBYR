@@ -70,15 +70,26 @@ The app expects these Supabase tables:
 - `properties` (id, name)
 - `whatsapp_groups` (id, property_id, name, template, links, evolution_id)
   - `evolution_id`: TEXT field storing WhatsApp Evolution API group ID (not displayed in UI, returned in GET /api/data)
-- `door_codes` (id, property_id, code_number, description)
+- `door_codes` (id, property_id, code_number, description, updated_at)
+  - `updated_at`: TIMESTAMP field tracking when each door code was last modified (displayed in UI and API responses)
 
-**Database Migration Required:**
-Run `database_migration.sql` in your Supabase SQL editor to add the `evolution_id` column to existing databases.
+**Database Migrations Required:**
+1. Run `database_migration.sql` to add the `evolution_id` column to whatsapp_groups
+2. Run `database_migration_door_codes_timestamp.sql` to add the `updated_at` column to door_codes
 
 ### Optional: Edge Functions
 For advanced features (Find Groups, Get Template), users need to deploy Supabase Edge Functions separately. See `INSTRUCTIONS.md` for details.
 
-## Recent Changes (November 11, 2025)
+## Recent Changes
+
+### November 11, 2025 - Door Code Timestamps
+- **Added timestamp tracking for door codes:**
+  - Door codes now track `updated_at` timestamp on every modification
+  - Timestamps displayed in UI next to each door code
+  - Created GET `/api/properties/:propertyId/door-codes` endpoint to retrieve door codes with timestamps
+  - Database migration file provided: `database_migration_door_codes_timestamp.sql`
+
+### November 11, 2025 - WhatsApp Evolution API Group ID Storage
 - Configured Vite for Replit environment (0.0.0.0:5000, allowedHosts: true)
 - Set up workflow for dev server (runs both backend and frontend)
 - Added .gitignore entries (node_modules, dist, .env.local)
@@ -140,9 +151,8 @@ DELETE /api/whatsapp-groups/:id/links/:linkIndex    # Remove link from group
 
 ### Door Codes
 ```bash
-POST /api/door-codes          # Create new door code
-PUT /api/door-codes/:id       # Update door code
-DELETE /api/door-codes/:id    # Delete door code
+GET /api/properties/:propertyId/door-codes    # Get all door codes for a property (includes updated_at timestamps)
+PUT /api/door-codes/:id                       # Update door code (automatically updates timestamp)
 ```
 
 ### Named Lookups (Legacy - for backward compatibility)

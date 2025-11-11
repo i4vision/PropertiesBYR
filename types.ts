@@ -2,6 +2,7 @@ export interface DoorCode {
   id: string; // db uuid
   code_number: number;
   description: string;
+  updated_at?: string;
 }
 
 export interface WhatsAppGroup {

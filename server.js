@@ -216,7 +216,8 @@ app.post('/api/properties', async (req, res) => {
         id: `mem-code-${memoryStore.nextId++}`,
         property_id: newProperty.id,
         code_number: i,
-        description: ''
+        description: '',
+        updated_at: new Date().toISOString()
       }));
       memoryStore.doorCodes.push(...newCodes);
       
@@ -240,7 +241,8 @@ app.post('/api/properties', async (req, res) => {
     const codesToInsert = Array.from({length: 11}, (_, i) => ({
       property_id: data.id,
       code_number: i,
-      description: ''
+      description: '',
+      updated_at: new Date().toISOString()
     }));
     
     const { data: newCodes, error: codesError } = await supabase
@@ -390,6 +392,7 @@ app.put('/api/door-codes/:id', async (req, res) => {
       const doorCode = memoryStore.doorCodes.find(c => c.id === id);
       if (doorCode) {
         doorCode.description = description;
+        doorCode.updated_at = new Date().toISOString();
         return res.json({ doorCode });
       }
       return res.status(404).json({ error: 'Door code not found' });
@@ -397,7 +400,10 @@ app.put('/api/door-codes/:id', async (req, res) => {
     
     const { data, error } = await supabase
       .from('door_codes')
-      .update({ description })
+      .update({ 
+        description,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
@@ -407,6 +413,29 @@ app.put('/api/door-codes/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating door code:', error);
     res.status(500).json({ error: 'Failed to update door code', details: error.message });
+  }
+});
+
+app.get('/api/properties/:propertyId/door-codes', async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    
+    if (usingMemoryStorage) {
+      const doorCodes = memoryStore.doorCodes.filter(c => c.property_id === propertyId);
+      return res.json({ doorCodes });
+    }
+    
+    const { data, error } = await supabase
+      .from('door_codes')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('code_number', { ascending: true });
+    
+    if (error) throw error;
+    res.json({ doorCodes: data || [] });
+  } catch (error) {
+    console.error('Error fetching door codes:', error);
+    res.status(500).json({ error: 'Failed to fetch door codes', details: error.message });
   }
 });
 

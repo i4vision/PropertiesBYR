@@ -13,6 +13,19 @@ const DoorCodeList: React.FC<DoorCodeListProps> = ({ property, onBack, onUpdateC
   const [editText, setEditText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Never updated';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const startEditing = (code: DoorCode) => {
     setEditingId(code.id);
     setEditText(code.description);
@@ -68,9 +81,14 @@ const DoorCodeList: React.FC<DoorCodeListProps> = ({ property, onBack, onUpdateC
                     onKeyDown={(e) => e.key === 'Enter' && handleSave(code.id)}
                   />
                 ) : (
-                  <p className="text-slate-700 dark:text-slate-200 p-2 min-h-[40px] break-words">
-                    {code.description || <span className="text-slate-400 italic">No description</span>}
-                  </p>
+                  <div className="p-2">
+                    <p className="text-slate-700 dark:text-slate-200 min-h-[28px] break-words">
+                      {code.description || <span className="text-slate-400 italic">No description</span>}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Last updated: {formatDate(code.updated_at)}
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="flex gap-2 self-end sm:self-center">
