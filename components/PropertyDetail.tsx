@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Property } from '../types';
 import { TrashIcon, PlusIcon, ChevronRightIcon, ArrowLeftIcon, ChatBubbleLeftRightIcon, CodeBracketIcon } from './icons';
 
@@ -11,18 +11,72 @@ interface PropertyDetailProps {
   onNavigateToDoorCodes: () => void;
 }
 
+interface WhatsAppGroup {
+  id: string;
+  subject: string;
+}
+
 const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAddGroup, onDeleteGroup, onNavigateToGroup, onNavigateToDoorCodes }) => {
-  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedGroupName, setSelectedGroupName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [whatsappGroups, setWhatsappGroups] = useState<WhatsAppGroup[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAdding) {
+      console.log('[PropertyDetail] Starting to fetch WhatsApp groups...');
+      setIsLoadingGroups(true);
+      setLoadError(null);
+      
+      const url = '/api/whatsapp/groups';
+      console.log('[PropertyDetail] Fetching from URL:', url);
+      
+      fetch(url)
+        .then(response => {
+          console.log('[PropertyDetail] Fetch response:', response.status, response.statusText);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log('[PropertyDetail] Received data:', data);
+          if (Array.isArray(data)) {
+            console.log('[PropertyDetail] Total groups from API:', data.length);
+            
+            // Filter out groups that have already been added
+            const existingGroupNames = new Set(property.whatsAppGroups.map(g => g.name));
+            const availableGroups = data.filter(
+              (group: WhatsAppGroup) => group.subject && !existingGroupNames.has(group.subject)
+            );
+            
+            console.log('[PropertyDetail] Available groups (not yet added):', availableGroups.length);
+            setWhatsappGroups(availableGroups);
+          } else {
+            console.error('[PropertyDetail] Unexpected response format:', data);
+            setLoadError('Unexpected response format from WhatsApp API');
+          }
+        })
+        .catch((error) => {
+          console.error("[PropertyDetail] Error fetching WhatsApp groups:", error);
+          setLoadError(`Failed to load WhatsApp groups: ${error.message}`);
+        })
+        .finally(() => {
+          setIsLoadingGroups(false);
+          console.log('[PropertyDetail] Fetch complete');
+        });
+    }
+  }, [isAdding, property.whatsAppGroups]);
 
   const handleAddGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newGroupName.trim() && !isSubmitting) {
+    if (selectedGroupName && !isSubmitting) {
       setIsSubmitting(true);
       try {
-        await onAddGroup(newGroupName.trim());
-        setNewGroupName('');
+        await onAddGroup(selectedGroupName);
+        setSelectedGroupName('');
         setIsAdding(false);
       } catch (error) {
         console.error("Failed to add group:", error);
@@ -81,19 +135,57 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property, onBack, onAdd
           </div>
           
           {isAdding && (
-            <form onSubmit={handleAddGroup} className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                placeholder="New group name"
-                className="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-secondary focus:outline-none"
-                autoFocus
-                disabled={isSubmitting}
-              />
-              <button type="submit" className="bg-secondary hover:bg-emerald-600 text-white font-bold p-2 rounded-md transition-colors disabled:bg-emerald-300" disabled={isSubmitting}>{isSubmitting ? '...' : 'Save'}</button>
-              <button type="button" onClick={() => setIsAdding(false)} className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold p-2 rounded-md transition-colors" disabled={isSubmitting}>X</button>
-            </form>
+            <div className="mb-4">
+              {isLoadingGroups ? (
+                <div className="text-center py-4 text-slate-500 dark:text-slate-400">
+                  Loading WhatsApp groups...
+                </div>
+              ) : loadError ? (
+                <div className="text-center py-4">
+                  <p className="text-red-500 dark:text-red-400 mb-4">{loadError}</p>
+                  <button
+                    onClick={() => setIsAdding(false)}
+                    className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-md transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleAddGroup} className="flex flex-col gap-2">
+                  <select
+                    value={selectedGroupName}
+                    onChange={(e) => setSelectedGroupName(e.target.value)}
+                    className="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-secondary focus:outline-none"
+                    autoFocus
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Select a WhatsApp group</option>
+                    {whatsappGroups.map((group) => (
+                      <option key={group.id} value={group.subject}>
+                        {group.subject}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="bg-secondary hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md transition-colors flex-1 disabled:bg-emerald-300"
+                      disabled={isSubmitting || !selectedGroupName}
+                    >
+                      {isSubmitting ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAdding(false)}
+                      className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-md transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
           <div className="space-y-3">
