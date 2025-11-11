@@ -74,7 +74,7 @@ The app expects these Supabase tables:
 ### Optional: Edge Functions
 For advanced features (Find Groups, Get Template), users need to deploy Supabase Edge Functions separately. See `INSTRUCTIONS.md` for details.
 
-## Recent Changes (November 10, 2025)
+## Recent Changes (November 11, 2025)
 - Configured Vite for Replit environment (0.0.0.0:5000, allowedHosts: true)
 - Set up workflow for dev server (runs both backend and frontend)
 - Added .gitignore entries (node_modules, dist, .env.local)
@@ -95,12 +95,22 @@ For advanced features (Find Groups, Get Template), users need to deploy Supabase
 - **UX Improvements:**
   - Added confirmation dialogs for property deletion (prevents accidental deletion of properties and all associated data)
   - Added confirmation dialogs for WhatsApp group deletion (prevents accidental deletion of groups and templates)
+- **External API Integrations:**
+  - Hospitable API integration: Fetches properties from Hospitable (bearer token auth)
+  - WhatsApp Evolution API integration: Fetches WhatsApp groups from evo01.i4vision.us (apiKey header auth)
+  - Both APIs secured with environment variables (HOSPITABLE_API_TOKEN, WHATSAPP_API_KEY, WHATSAPP_API_URL, WHATSAPP_INSTANCE)
 
 ## Backend API Endpoints
 
 ### Health Check
 ```bash
 GET /health
+```
+
+### External API Integration
+```bash
+GET /api/hospitable/properties    # Fetch properties from Hospitable API
+GET /api/whatsapp/groups          # Fetch WhatsApp groups from Evolution API
 ```
 
 ### Get All Data

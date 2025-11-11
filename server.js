@@ -110,11 +110,15 @@ app.get('/api/hospitable/properties', async (req, res) => {
 app.get('/api/whatsapp/groups', async (req, res) => {
   try {
     const apiKey = process.env.WHATSAPP_API_KEY;
-    const apiUrl = process.env.WHATSAPP_API_URL || 'https://evo01.i4vision.us';
+    let apiUrl = process.env.WHATSAPP_API_URL || 'https://evo01.i4vision.us';
     const instance = process.env.WHATSAPP_INSTANCE || 'MC';
     
     if (!apiKey) {
       return res.status(500).json({ error: 'WhatsApp API key not configured' });
+    }
+
+    if (apiUrl.includes('/group/fetchAllGroups')) {
+      apiUrl = apiUrl.split('/group/')[0];
     }
 
     const url = `${apiUrl}/group/fetchAllGroups/${instance}?getParticipants=false`;
@@ -127,6 +131,8 @@ app.get('/api/whatsapp/groups', async (req, res) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'No error details');
+      console.error(`WhatsApp API error (${response.status}):`, errorText);
       throw new Error(`WhatsApp API returned ${response.status}`);
     }
 
