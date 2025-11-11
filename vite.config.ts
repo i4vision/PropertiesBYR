@@ -13,11 +13,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5000,
     strictPort: true,
-    allowedHosts: true,
     hmr: {
-      overlay: false,
-      clientPort: 443,  // Replit routes external connections through 443
-      protocol: 'wss'   // Use secure WebSocket for HMR in Replit
+      protocol: 'wss',
+      host: process.env.REPLIT_DEV_DOMAIN,
+      clientPort: 443
     },
     proxy: {
       '/api': {
