@@ -151,14 +151,14 @@ DELETE /api/whatsapp-groups/:id/links/:linkIndex    # Remove link from group
 
 ### Door Codes
 ```bash
-GET /api/properties/:propertyId/door-codes    # Get all door codes for a property (includes updated_at timestamps)
-PUT /api/door-codes/:id                       # Update door code (automatically updates timestamp)
+PUT /api/door-codes/:id    # Update door code (automatically updates timestamp)
 ```
 
-### Named Lookups (Legacy - for backward compatibility)
+### Named Lookups (Use property/group names instead of IDs)
 ```bash
-GET /api/properties/:propertyName/groups    # Get groups by property name
-GET /api/groups/:groupName/template         # Get template by group name
+GET /api/properties/:propertyName/door-codes    # Get door codes by property name (includes updated_at timestamps)
+GET /api/properties/:propertyName/groups        # Get groups by property name
+GET /api/groups/:groupName/template             # Get template by group name
 ```
 
 ## Notes

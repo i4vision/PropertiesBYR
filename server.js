@@ -439,6 +439,57 @@ app.get('/api/properties/:propertyId/door-codes', async (req, res) => {
   }
 });
 
+app.get('/api/properties/:propertyName/door-codes', async (req, res) => {
+  try {
+    const { propertyName } = req.params;
+    
+    if (usingMemoryStorage) {
+      const property = memoryStore.properties.find(p => p.name === propertyName);
+      if (!property) {
+        return res.status(404).json({ error: 'Property not found' });
+      }
+      const doorCodes = memoryStore.doorCodes
+        .filter(c => c.property_id === property.id)
+        .sort((a, b) => a.code_number - b.code_number);
+      return res.json({ 
+        propertyName, 
+        propertyId: property.id,
+        doorCodes 
+      });
+    }
+    
+    const { data: property, error: propertyError } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('name', propertyName)
+      .single();
+    
+    if (propertyError) {
+      if (propertyError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Property not found' });
+      }
+      throw propertyError;
+    }
+    
+    const { data: doorCodes, error: codesError } = await supabase
+      .from('door_codes')
+      .select('*')
+      .eq('property_id', property.id)
+      .order('code_number', { ascending: true });
+    
+    if (codesError) throw codesError;
+    
+    res.json({ 
+      propertyName,
+      propertyId: property.id,
+      doorCodes: doorCodes || [] 
+    });
+  } catch (error) {
+    console.error('Error fetching door codes:', error);
+    res.status(500).json({ error: 'Failed to fetch door codes', details: error.message });
+  }
+});
+
 app.get('/api/properties/:propertyName/groups', async (req, res) => {
   try {
     const { propertyName } = req.params;
