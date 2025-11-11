@@ -10,6 +10,7 @@ services:
     environment:
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      HOSPITABLE_API_TOKEN: ${HOSPITABLE_API_TOKEN}
       PORT: "8085"
       NODE_ENV: production
     healthcheck:
