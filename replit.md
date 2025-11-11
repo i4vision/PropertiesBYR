@@ -70,23 +70,33 @@ The app expects these Supabase tables:
 - `properties` (id, name)
 - `whatsapp_groups` (id, property_id, name, template, links, evolution_id)
   - `evolution_id`: TEXT field storing WhatsApp Evolution API group ID (not displayed in UI, returned in GET /api/data)
-- `door_codes` (id, property_id, code_number, description, updated_at)
-  - `updated_at`: TIMESTAMP field tracking when each door code was last modified (displayed in UI and API responses)
+- `door_codes` (id, property_id, code_number, description, updated_at, last_used)
+  - `updated_at`: TIMESTAMP field tracking when the door code description was last modified (displayed in UI and API responses)
+  - `last_used`: TIMESTAMP field tracking when the door code was last accessed via POST request (displayed in UI and API responses)
 
 **Database Migrations Required:**
 1. Run `database_migration.sql` to add the `evolution_id` column to whatsapp_groups
 2. Run `database_migration_door_codes_timestamp.sql` to add the `updated_at` column to door_codes
+3. Run `database_migration_door_codes_last_used.sql` to add the `last_used` column to door_codes
 
 ### Optional: Edge Functions
 For advanced features (Find Groups, Get Template), users need to deploy Supabase Edge Functions separately. See `INSTRUCTIONS.md` for details.
 
 ## Recent Changes
 
+### November 11, 2025 - Door Code Usage Tracking
+- **Added usage tracking for door codes:**
+  - Door codes now track two separate timestamps: `updated_at` (when description was modified) and `last_used` (when code was accessed)
+  - Both timestamps displayed in UI: "Last updated" and "Last used"
+  - Created POST `/api/door-codes/use` endpoint to track door code usage
+  - Endpoint accepts `property_id` and `code_number` parameters, sets `last_used` timestamp
+  - Database migration file provided: `database_migration_door_codes_last_used.sql`
+
 ### November 11, 2025 - Door Code Timestamps
 - **Added timestamp tracking for door codes:**
   - Door codes now track `updated_at` timestamp on every modification
   - Timestamps displayed in UI next to each door code
-  - Created GET `/api/properties/:propertyId/door-codes` endpoint to retrieve door codes with timestamps
+  - Created GET `/api/properties/:propertyName/door-codes` endpoint to retrieve door codes with timestamps (uses property name, not ID)
   - Database migration file provided: `database_migration_door_codes_timestamp.sql`
 
 ### November 11, 2025 - WhatsApp Evolution API Group ID Storage
@@ -151,12 +161,14 @@ DELETE /api/whatsapp-groups/:id/links/:linkIndex    # Remove link from group
 
 ### Door Codes
 ```bash
-PUT /api/door-codes/:id    # Update door code (automatically updates timestamp)
+PUT /api/door-codes/:id           # Update door code description (automatically updates updated_at timestamp)
+POST /api/door-codes/use          # Track door code usage (sets last_used timestamp)
+                                  # Body: { property_id: string, code_number: number }
 ```
 
 ### Named Lookups (Use property/group names instead of IDs)
 ```bash
-GET /api/properties/:propertyName/door-codes    # Get door codes by property name (includes updated_at timestamps)
+GET /api/properties/:propertyName/door-codes    # Get door codes by property name (includes updated_at and last_used timestamps)
 GET /api/properties/:propertyName/groups        # Get groups by property name
 GET /api/groups/:groupName/template             # Get template by group name
 ```

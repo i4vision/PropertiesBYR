@@ -3,6 +3,7 @@ export interface DoorCode {
   code_number: number;
   description: string;
   updated_at?: string;
+  last_used?: string;
 }
 
 export interface WhatsAppGroup {

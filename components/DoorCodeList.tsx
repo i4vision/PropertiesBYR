@@ -13,8 +13,8 @@ const DoorCodeList: React.FC<DoorCodeListProps> = ({ property, onBack, onUpdateC
   const [editText, setEditText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never updated';
+  const formatDate = (dateString?: string, neverText = 'Never updated') => {
+    if (!dateString) return neverText;
     const date = new Date(dateString);
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -85,9 +85,10 @@ const DoorCodeList: React.FC<DoorCodeListProps> = ({ property, onBack, onUpdateC
                     <p className="text-slate-700 dark:text-slate-200 min-h-[28px] break-words">
                       {code.description || <span className="text-slate-400 italic">No description</span>}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Last updated: {formatDate(code.updated_at)}
-                    </p>
+                    <div className="flex flex-col sm:flex-row sm:gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <span>Last updated: {formatDate(code.updated_at)}</span>
+                      <span>Last used: {formatDate(code.last_used, 'Never used')}</span>
+                    </div>
                   </div>
                 )}
               </div>

@@ -416,6 +416,60 @@ app.put('/api/door-codes/:id', async (req, res) => {
   }
 });
 
+app.post('/api/door-codes/use', async (req, res) => {
+  try {
+    const { property_id, code_number } = req.body;
+    
+    if (property_id === undefined || code_number === undefined) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters', 
+        details: 'Both property_id and code_number are required' 
+      });
+    }
+    
+    const now = new Date().toISOString();
+    
+    if (usingMemoryStorage) {
+      const doorCode = memoryStore.doorCodes.find(
+        c => c.property_id === property_id && c.code_number === code_number
+      );
+      if (!doorCode) {
+        return res.status(404).json({ error: 'Door code not found' });
+      }
+      doorCode.last_used = now;
+      return res.json({ 
+        success: true,
+        doorCode,
+        message: `Door code ${code_number} usage tracked at ${now}`
+      });
+    }
+    
+    const { data, error } = await supabase
+      .from('door_codes')
+      .update({ last_used: now })
+      .eq('property_id', property_id)
+      .eq('code_number', code_number)
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Door code not found' });
+      }
+      throw error;
+    }
+    
+    res.json({ 
+      success: true,
+      doorCode: data,
+      message: `Door code ${code_number} usage tracked at ${now}`
+    });
+  } catch (error) {
+    console.error('Error tracking door code usage:', error);
+    res.status(500).json({ error: 'Failed to track door code usage', details: error.message });
+  }
+});
+
 app.get('/api/properties/:propertyId/door-codes', async (req, res) => {
   try {
     const { propertyId } = req.params;
