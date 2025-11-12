@@ -14,7 +14,7 @@ services:
       WHATSAPP_API_KEY: ${WHATSAPP_API_KEY}
       WHATSAPP_API_URL: ${WHATSAPP_API_URL}
       WHATSAPP_INSTANCE: ${WHATSAPP_INSTANCE}
-      PORT: "8085"
+      PORT: "8085"            # app listens on 8085 in the container
       NODE_ENV: production
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/health"]
@@ -23,6 +23,18 @@ services:
       retries: 3
     networks:
       - property-hub-network
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+
+      # HTTPS router for backend API
+      - traefik.http.routers.properties_api.rule=Host(`api-properties.i4vision.us`)
+      - traefik.http.routers.properties_api.entrypoints=websecure
+      - traefik.http.routers.properties_api.tls=true
+
+      # Map to the container's internal port
+      - traefik.http.services.properties_api.loadbalancer.server.port=8085
 
   frontend:
     build:
@@ -32,14 +44,29 @@ services:
         - VITE_SUPABASE_URL=${SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
     container_name: property-hub
-    ports:
-      - "8085:8085"
+    # Remove the host port publish; Traefik will expose it
+    # ports:
+    #   - "8085:8085"
     restart: unless-stopped
     depends_on:
       - backend
     networks:
       - property-hub-network
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+
+      # HTTPS router for frontend
+      - traefik.http.routers.properties.rule=Host(`properties.i4vision.us`)
+      - traefik.http.routers.properties.entrypoints=websecure
+      - traefik.http.routers.properties.tls=true
+
+      # Map to the container's internal port
+      - traefik.http.services.properties.loadbalancer.server.port=8085
 
 networks:
   property-hub-network:
     driver: bridge
+  proxy:
+    external: true
