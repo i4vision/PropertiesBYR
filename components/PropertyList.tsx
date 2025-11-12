@@ -190,8 +190,13 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
                 <div>
                   <h2 className="text-xl font-bold text-slate-800 dark:text-white">{property.name}</h2>
                   <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1"><ChatBubbleLeftRightIcon className="w-4 h-4" /> {property.whatsAppGroups.length} Groups</span>
-                      <span className="flex items-center gap-1"><CodeBracketIcon className="w-4 h-4" /> {property.doorCodes.filter(code => code.description && code.description.trim() !== '').length} Codes</span>
+                      <span className="flex items-center gap-1">
+                        <ChatBubbleLeftRightIcon className="w-4 h-4" /> {property.whatsAppGroups.length} Groups
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <CodeBracketIcon className="w-4 h-4" /> 
+                        {property.doorCodes.filter(code => code.description && code.description.trim() !== '').length} Codes
+                      </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
