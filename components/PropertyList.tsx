@@ -108,7 +108,7 @@ const PropertyList: React.FC<PropertyListProps> = ({ properties, onAddProperty, 
       <header className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <HomeIcon className="w-8 h-8 text-primary" />
-          <span>My Properties</span>
+          <span>WhatsApp Groups</span>
         </h1>
         <button
           onClick={() => setIsAdding(true)}
