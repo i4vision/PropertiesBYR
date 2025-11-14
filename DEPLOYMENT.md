@@ -7,7 +7,7 @@ This guide explains how to deploy the application to a Portainer instance using 
 ### Option 1: Backend API Only (Port 8085)
 Use `docker-compose.backend-only.yml` - Deploys only the Express backend API server on port 8085
 
-### Option 2: Full Application
+### Option 2: Full Application.
 Use `docker-compose.yml` - Deploys both backend (8085) and frontend (80)
 
 The recommended method is to use Portainer's "Stack" feature.
