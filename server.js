@@ -579,14 +579,14 @@ app.get('/api/properties/:propertyName/groups', async (req, res) => {
   }
 });
 
-app.get('/api/groups/:groupName/template', async (req, res) => {
+app.get('/api/groups/:groupId/template', async (req, res) => {
   try {
-    const { groupName } = req.params;
+    const { groupId } = req.params;
     
     const { data: group, error: groupError } = await supabase
       .from('whatsapp_groups')
       .select('id, name, template, links, property_id')
-      .eq('name', groupName)
+      .eq('id', groupId)
       .single();
     
     if (groupError) {
